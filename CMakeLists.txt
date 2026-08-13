@@ -9,6 +9,8 @@ find_package(SDL3 REQUIRED)
 
 add_executable(chip8
     src/main.c
+    src/backend.c
+    src/fontf.c
 )
 
 include_directories(include/)
@@ -17,6 +19,10 @@ target_link_libraries(chip8 PRIVATE
     SDL3::SDL3
 )
 
+if(UNIX AND NOT APPLE)
+    target_link_libraries(chip8 PRIVATE m)
+endif()
+
 if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
-    target_compile_options(chip8 PRIVATE)
+    target_compile_options(chip8 PRIVATE -Wall -Wextra)
 endif()

@@ -1,18 +1,20 @@
-#include "chip8/backend.h"
+#include "chip8/backend.h" // Keep this, include whatever else you want to
 #include <SDL3/SDL.h>
 #include <stdlib.h>
 #include <math.h>
 
-struct BACKEND_Controller
+// You can change everything here except the names and function/variable definitions ( with some exceptions )
+
+struct BACKEND_Controller // The main struct used for communication between main.c and the backend. It's opaque to backend.h so you can change it's fields
 {
-    SDL_Window* window;
-    SDL_Renderer* renderer;
-    SDL_AudioStream* audio_stream;
-    uint8_t* const keyboard;
-    const uint8_t* const display;
+    SDL_Window* window;            //
+    SDL_Renderer* renderer;        // Change these however you see fit according to the backend you're using
+    SDL_AudioStream* audio_stream; //
+    uint8_t* const keyboard;      // The keyboard is managed by the backend, you. Modify its values accordingly in BACKEND_update()
+    const uint8_t* const display; // Never change this, only read from it, the interpreter manages this, you render it
 };
 
-BACKEND_Controller* BACKEND_create_controller(const uint8_t* display, uint8_t* keyboard)
+BACKEND_Controller* BACKEND_create_controller(const uint8_t* display, uint8_t* keyboard) // Called once before entering the main loop in main.c
 {
     if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO)) goto SDL_INIT_ERROR;
     BACKEND_Controller base_controller = {.display = display, .keyboard = keyboard, .window = NULL, .renderer = NULL, .audio_stream = NULL};
@@ -46,7 +48,7 @@ SDL_INIT_ERROR:
     return NULL;
 }
 
-void BACKEND_destroy_controller(BACKEND_Controller* controller)
+void BACKEND_destroy_controller(BACKEND_Controller* controller) // Called when main loop ends, free the memory according to your backend
 {
     SDL_DestroyAudioStream(controller->audio_stream);
     SDL_DestroyRenderer(controller->renderer);
@@ -55,8 +57,8 @@ void BACKEND_destroy_controller(BACKEND_Controller* controller)
     SDL_Quit();
 }
 
-void BACKEND_update_display(BACKEND_Controller* controller)
-{
+void BACKEND_update_display(BACKEND_Controller* controller) // Called every iteration, 60hz if BACKEND_wait_ns is precise (main.c accounts for work delay)
+{  // Read from the controller's display pointer. If a value is 0, draw a black pixel, otherwise a white one. Scale and render it accordingly
     for (int y = 0; y < BACKEND_DISPLAY_HEIGHT; y++)
     {
         for (int x = 0; x < BACKEND_DISPLAY_WIDTH; x++)
@@ -70,8 +72,8 @@ void BACKEND_update_display(BACKEND_Controller* controller)
     SDL_RenderPresent(controller->renderer);
 }
 
-void BACKEND_handle_sound(BACKEND_Controller* controller, uint8_t enabled)
-{
+void BACKEND_handle_sound(BACKEND_Controller* controller, uint8_t enabled) // Play the one sound Chip8 has. Ideally make it with an audio stream like this
+{                                                                          // and not a single arbitrary "play()" function with a file or so
     static float phase = 0.0f;
 
     float samples[800];
@@ -99,12 +101,12 @@ void BACKEND_handle_sound(BACKEND_Controller* controller, uint8_t enabled)
 }
 
 
-void BACKEND_wait_ns(long ns)
+void BACKEND_wait_ns(long ns) // Wait the given amount of nanoseconds ( yield the thread ). The interpreter accounts for delay due to work done per loop
 {
     SDL_DelayPrecise(ns);
 }
 
-SDL_Scancode hex_to_key_map[16] =
+SDL_Scancode hex_to_key_map[16] = // Depending on your setup, you might not need this, or you can set it up differently
 {
     SDL_SCANCODE_1,
     SDL_SCANCODE_2,
@@ -127,7 +129,7 @@ SDL_Scancode hex_to_key_map[16] =
     SDL_SCANCODE_V
 };
 
-uint8_t BACKEND_update(BACKEND_Controller* controller)
+uint8_t BACKEND_update(BACKEND_Controller* controller) // Called once every iteration, 60hz ideally. Handle the values other functions use in the backend
 {
     SDL_Event event;
 

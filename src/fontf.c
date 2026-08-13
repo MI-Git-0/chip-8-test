@@ -1,7 +1,7 @@
 #include "chip8/defs.h"
 #include <string.h>
 
-uint8_t font_bytes[] =  // 0 -> F 5-Byte representations
+uint8_t font_bytes[] =  // 0 -> F 5-Byte representations | Don't change this
 {
     0xF0, 0x90, 0x90, 0x90, 0xF0,
     0x20, 0x60, 0x20, 0x20, 0x70,
